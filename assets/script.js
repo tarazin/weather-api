@@ -1,131 +1,170 @@
-let userInput
-let uvIndex
-let pastCities = JSON.parse(localStorage.getItem('cities')) || []
-let display = document.getElementById('cityInfo')
-let fiveSelect= document.getElementById('fiveDay')
-let citySelect = document.getElementById('pastCities')
 
-//  API KEY : 504fb55759317621b3658208c57633c9
+var cityResultText = $("#cityResult");
+var tempResultText = $("#tempResult");
+var humidityResult = $("#humidityResult");
+var windResultText = $("#windResult");
+var mainIcon =$("#mainIcon");
+var rowCards = $("#rowCards");
+var dayForecast = $("#row5day");
+var cardDisplay = $("#cardDisplay");
+var UVIndexText = $("#UVIndexResult");
+var buttonList = $("#buttonsList");
+var forecastDate = {};
+var forecastIcon = {};
+var forecastTemp = {};
+var forecastHum = {};
+var today = moment().format('DD' + "/" + 'MM' + '/' + 'YYYY');
+var APIKey = "&units=metric&APPID=43e6af6e8d01c386a542f02348ca841e";
+var url =  "https://api.openweathermap.org/data/2.5/weather?q=";
+var citiesArray = JSON.parse(localStorage.getItem("Saved City")) || [];
 
 
-//API call by city name: api.openweathermap.org/data/2.5/weather?q=<cityName>
-document.addEventListener('click', ()=>{
-  let target = event.target
-  if(target.classList.contains('btn')){
-    userInput = document.getElementById('citySearch').value
-    // console.log(userInput)
-    displayWeather(userInput)
-    //empty out userInput
-    document.getElementById('citySearch').value =''
-  }
+$(document).ready(function (){
+    var userInput = citiesArray[citiesArray.length - 1];
+    currentWeather(userInput);
+    forecast(userInput);
+    lastSearch ();
+
+});
+
+function currentWeather(userInput) {
+    mainIcon.empty();
+    var queryURL = url + userInput + APIKey;
+    $.ajax({
+        url: queryURL,
+        method: "GET"
+    }).then(function(response){
+        var cityInfo = response.name;
+        var country = response.sys.country; 
+        var temp = response.main.temp;
+        var humidity = response.main.humidity;
+        var wind = response.wind.speed;
+        var lat = response.coord.lat;
+        var lon = response.coord.lon;
+        var icon = response.weather[0].icon;
+        var UVindexURL = "https://api.openweathermap.org/data/2.5/uvi?" + "lat=" + lat + "&" + "lon=" + lon + "&APPID=123babda3bc150d180af748af99ad173";
+        var newImgMain = $("<img>").attr("class", "card-img-top").attr("src", "https://openweathermap.org/img/wn/" + icon + "@2x.png");
+        mainIcon.append(newImgMain);
+        cityResultText.text(cityInfo + ", " + country + " " + today);
+        tempResultText.text("Temperature: " + temp + " ºC");
+        humidityResult.text("Humidity: " + humidity + " %");
+        windResultText.text("Wind Speed: " + wind + " MPH");
+        $.ajax({
+            url: UVindexURL,
+            method: "GET"
+        }).then(function(uvIndex){
+            var UV = uvIndex.value;
+            var colorUV;
+            if (UV <= 3) {
+                colorUV = "green";
+            } else if (UV >= 3 & UV <= 6) {
+                colorUV = "yellow";
+            } else if (UV >= 6 & UV <= 8) {
+                colorUV = "orange";
+            } else {
+                colorUV = "red";
+            }
+            UVIndexText.empty();
+            var UVResultText = $("<p>").attr("class", "card-text").text("UV Index: ");
+            UVResultText.append($("<span>").attr("class", "uvindex").attr("style", ("background-color: " + colorUV)).text(UV))
+            UVIndexText.append(UVResultText);
+            cardDisplay.attr("style", "display: flex; width: 98%");
+        })    
+    })
+    }
+
+function forecast (userInput) {
+    dayForecast.empty();
+    rowCards.empty();
+    var fore5 = $("<h2>").attr("class", "forecast").text("5-Day Forecast: "); 
+    var forecastURL = "https://api.openweathermap.org/data/2.5/forecast?q=" + userInput + "&units=metric&APPID=123babda3bc150d180af748af99ad173";
+    $.ajax({
+        url: forecastURL,
+        method: "GET"
+    }).then(function(response){
+        for (var i = 0; i < response.list.length; i += 8){
+            
+            forecastDate[i] = response.list[i].dt_txt;
+            forecastIcon[i] = response.list[i].weather[0].icon;
+            forecastTemp[i] = response.list[i].main.temp; 
+            forecastHum[i] = response.list[i].main.humidity;  
+
+            var newCol2 = $("<div>").attr("class", "col-2");
+            rowCards.append(newCol2);
+
+            var newDivCard = $("<div>").attr("class", "card text-white bg-primary mb-3");
+            newDivCard.attr("style", "max-width: 18rem;")
+            newCol2.append(newDivCard);
+
+            var newCardBody = $("<div>").attr("class", "card-body");
+            newDivCard.append(newCardBody);
+
+            var newH5 = $("<h5>").attr("class", "card-title").text(moment(forecastDate[i]).format("MMM Do"));
+            newCardBody.append(newH5);
+
+            var newImg = $("<img>").attr("class", "card-img-top").attr("src", "https://openweathermap.org/img/wn/" + forecastIcon[i] + "@2x.png");
+            newCardBody.append(newImg);
+
+            var newPTemp = $("<p>").attr("class", "card-text").text("Temp: " + Math.floor(forecastTemp[i]) + "ºC");
+            newCardBody.append(newPTemp);
+
+            var newPHum = $("<p>").attr("class", "card-text").text("Humidity: " + forecastHum[i] + " %");
+            newCardBody.append(newPHum);
+
+            dayForecast.append(fore5);
+            };
+            })
+
+        }
+
+function storeData (userInput) {
+    var userInput = $("#searchInput").val().trim().toLowerCase();
+    var containsCity = false;
+
+    if (citiesArray != null) {
+
+		$(citiesArray).each(function(x) {
+			if (citiesArray[x] === userInput) {
+				containsCity = true;
+			}
+		});
+	}
+
+	if (containsCity === false) {
+        citiesArray.push(userInput);
+	}
+
+	localStorage.setItem("Saved City", JSON.stringify(citiesArray));
+
+}
+
+function lastSearch () {
+    buttonList.empty()
+    for (var i = 0; i < citiesArray.length; i ++) {
+        var newButton = $("<button>").attr("type", "button").attr("class","savedBtn btn btn-secondary btn-lg btn-block");
+        newButton.attr("data-name", citiesArray[i])
+        newButton.text(citiesArray[i]);
+        buttonList.prepend(newButton);
+    }
+    $(".savedBtn").on("click", function(event){
+        event.preventDefault();
+        var userInput = $(this).data("name");
+        currentWeather(userInput);
+        forecast(userInput);
+    })
+
+}
+
+$(".btn").on("click", function (event){
+    event.preventDefault();
+    if ($("#searchInput").val() === "") {
+    alert("Please type a userInput to know the current weather");
+    } else
+    var userInput = $("#searchInput").val().trim().toLowerCase();
+    currentWeather(userInput);
+    forecast(userInput);
+    storeData();
+    lastSearch();
+    $("#searchInput").val("");
+
 })
-
-
-const renderPastCity = _ =>{
-  //set to empty before every render
-  citySelect.innerHTML = ''
-  for(let i = 0; i<pastCities.length; i++){
-    let cityNode = document.createElement('div')
-    cityNode.innerHTML = `${pastCities[i]} <hr>`
-    citySelect.append(cityNode)
-  }
-}
-const toFarenheit = value =>{
-  value = (value * (9 / 5) - 459.67).toFixed(2)
-  return value
-}
-//Capitalize first letter of every word in the string
-const titleCase = str => {
-  let splitStr = str.toLowerCase().split(' ');
-  // console.log(splitStr)
-  for (let i = 0; i < splitStr.length; i++) {
-    splitStr[i] = splitStr[i].charAt(0).toUpperCase() + splitStr[i].substring(1);
-  }
-  return splitStr.join(' ');
-}
-const displayWeather = userInput =>{
-  //pushing userInput to local storage
-  userInput = titleCase(userInput)
-  pastCities.push(userInput)
-  console.log(pastCities)
-  localStorage.setItem('cities', JSON.stringify(pastCities))
-  renderPastCity()
-  getCityWeather(userInput)
-}
-
-const getCityWeather = userInput =>{
-  display.innerHTML = ''
-  fetch(`https://api.openweathermap.org/data/2.5/weather?q=${userInput}&appid=504fb55759317621b3658208c57633c9`)
-    .then(response => response.json())
-    .then(({ main: { temp, humidity }, wind: { speed }, coord: { lon, lat } }) => {
-      let info = document.createElement('div')
-      temp = toFarenheit(temp)
-
-      // console.log(temp, humidity, speed, lon, lat)
-      info.innerHTML = `<h2>${userInput} ${moment().format('MM/DD/YYYY')}</h2>
-    <p>Temperature: ${temp} ºF</p>
-    <p>Humidity: ${humidity}</p>
-    <p> Wind Speed: ${speed} mph </p>
-    `
-      display.append(info)
-      getUvIndex(lon, lat)
-      getFiveDayForecast(lon, lat)
-      
-    })
-    .catch(error => console.error(error))
-}
-const getUvIndex = (lon, lat) =>{
-  fetch(`https://api.openweathermap.org/data/2.5/uvi?appid=504fb55759317621b3658208c57633c9&lat=${lat}&lon=${lon}`)
-    .then(response => response.json())
-    .then(({ value }) => {
-      let uvNode = document.createElement('p')
-      uvNode.textContent = 'UV Index: '
-      let uvSpan = document.createElement('span')
-      uvSpan.textContent = `${value}`
-      value = Math.floor(value)
-      if(value < 3){
-        uvSpan.setAttribute('class', 'uvSafe')
-      }
-      else if (value > 2 && value <6){
-        uvSpan.setAttribute('class', 'uvMed')
-      }
-      else if (value > 5 && value < 8){
-        uvSpan.setAttribute('class', 'uvMod')
-      }
-      else{
-        uvSpan.setAttribute('class', 'uvHigh')
-      }
-      uvNode.append(uvSpan)
-      display.append(uvNode)
-    })
-
-    .catch(error => console.error(error))
-}
-
-const getFiveDayForecast = (lon, lat) =>{
-  fiveSelect.innerHTML =''
-  fetch(`https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=504fb55759317621b3658208c57633c9`)
-    .then(response => response.json())
-    .then(data => {
-      console.log(data)
-      //converting unix time stamp to a date time
-      let list = data.list
-      console.log(moment.unix(list[0].dt).format("MM/DD/YYYY"))
-      for(let i = 7; i<list.length; i+=7){
-        let fiveNode = document.createElement('div')
-        fiveNode.setAttribute('class', 'col-sm-2.4 fiveDayStyle')
-        fiveNode.innerHTML =`
-            <h6>${moment.unix(list[i].dt).format("MM/DD/YYYY")}</h6>
-            <img src ="https://openweathermap.org/img/wn/${list[i].weather[0].icon}.png" alt = "${list[i].weather[0].icon}">
-            <p>Temp: ${toFarenheit(list[i].main.temp)} ºF</p>
-            <p>Humidity: ${list[i].main.humidity}%</p>
-        `
-        console.log(fiveNode)
-        fiveSelect.append(fiveNode)
-      }
-      // starts at index 0 and increases by 7
-    })
-    .catch(error => console.error(error))
-}
-
-renderPastCity()

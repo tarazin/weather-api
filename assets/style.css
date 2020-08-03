@@ -1,55 +1,60 @@
-html {
-  box-sizing: border-box;
+a {
+  color: white !important;
+  font-size: 30px;
+  text-decoration: none !important;
 }
 
-.jumboStyle {
-  text-align: center;
-  background-color: black;
-  color: white;
+#nav {
+  padding: 10px;
+  justify-content: center;
 }
 
-body {
-  background-color: lightgray
+#row1 {
+  padding-top: 20px;
+  padding-left: 20px;
+  padding-bottom: 10px;
 }
 
-.searchBar {
-  margin-right: 5px;
-  padding-left: 2px;
+.form-inline {
+  padding-left: 20px;
+  padding-bottom: 20px;
 }
 
-.forecast {
-  text-align: center
-}
-
-.uvHigh {
-  background-color: red;
-  color: white
-}
-
-.uvSafe {
-  background-color: green;
-  color: white
-}
-
-.uvMed {
-  background-color: yellow;
-  color: black;
+#lastSearch {
+  padding-left: 35px;
   
 }
 
-.uvMod {
-  background-color: orange;
-  color: black;
+#weatherCard {
+  padding-top: 20px;
+  padding-bottom: 20px;
 }
 
-span {
-  padding: 5px;
+#row5day {
+  padding-bottom: 20px;
 }
 
-.fiveDayStyle {
-  background-color: lightskyblue;
-  color: black;
-  margin: 0 auto;
-  margin-right: 5px;
-  padding: 10px;
+#rowCards {
+  justify-content: center;
+}
+
+#cardDisplay {
+  display: none;
+}
+
+#buttonsList {
+  /* display: none; */
+}
+
+.container-fluid {
+  padding-bottom: 70px;
+}
+
+/* .col-sm-4 {
+  background-color: #e6f2ff;
+} */
+
+footer {
+  text-align: center;
+  clear: both;
 }

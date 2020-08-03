@@ -16,7 +16,7 @@ SO THAT I can plan a trip accordingly
 
 So, our wheather dashbord will look like this:
 
-<img src= "./demo.jpg">
+![](./demo.jpg)
 
 
 The cool thing about this app is that it shows a 5-day forecast that displays the date, an icon representation of weather conditions, the temperature, and the humidity with a single click! Enjoy! ;) 
